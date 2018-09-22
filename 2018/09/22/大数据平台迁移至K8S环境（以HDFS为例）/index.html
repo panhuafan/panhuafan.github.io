@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Kubernetes,Bigdata," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Kubernetes 由 Google 推出，是 Google 十几年以来大规模应用容器技术的经验积累。Kubernetes 具有完备的集群管理能力，包括多层次的安全防护和准入机制、多租户应用支撑能力、透明的服务注册和服务发现机制、内建智能负载均衡器、强大的故障发现和自我修复能力、服务滚动升级和在线扩容能力、可扩展的资源自动调度机制，以及多粒度的资源配额管理能力。 本次以 HDFS 为例，将 HD">
+<meta name="keywords" content="Kubernetes,Bigdata">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大数据平台迁移至K8S环境（以HDFS为例）">
+<meta property="og:url" content="http://yoursite.com/2018/09/22/大数据平台迁移至K8S环境（以HDFS为例）/index.html">
+<meta property="og:site_name" content="Heaven or Hell">
+<meta property="og:description" content="Kubernetes 由 Google 推出，是 Google 十几年以来大规模应用容器技术的经验积累。Kubernetes 具有完备的集群管理能力，包括多层次的安全防护和准入机制、多租户应用支撑能力、透明的服务注册和服务发现机制、内建智能负载均衡器、强大的故障发现和自我修复能力、服务滚动升级和在线扩容能力、可扩展的资源自动调度机制，以及多粒度的资源配额管理能力。 本次以 HDFS 为例，将 HD">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-09-22T08:37:20.703Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="大数据平台迁移至K8S环境（以HDFS为例）">
+<meta name="twitter:description" content="Kubernetes 由 Google 推出，是 Google 十几年以来大规模应用容器技术的经验积累。Kubernetes 具有完备的集群管理能力，包括多层次的安全防护和准入机制、多租户应用支撑能力、透明的服务注册和服务发现机制、内建智能负载均衡器、强大的故障发现和自我修复能力、服务滚动升级和在线扩容能力、可扩展的资源自动调度机制，以及多粒度的资源配额管理能力。 本次以 HDFS 为例，将 HD">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/09/22/大数据平台迁移至K8S环境（以HDFS为例）/"/>
+
+
+
+
+
+  <title>大数据平台迁移至K8S环境（以HDFS为例） | Heaven or Hell</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Heaven or Hell</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/22/大数据平台迁移至K8S环境（以HDFS为例）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="panhuafan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Heaven or Hell">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">大数据平台迁移至K8S环境（以HDFS为例）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-22T16:34:22+08:00">
+                2018-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Bigdata/" itemprop="url" rel="index">
+                    <span itemprop="name">Bigdata</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Kubernetes 由 Google 推出，是 Google 十几年以来大规模应用容器技术的经验积累。Kubernetes 具有完备的集群管理能力，包括多层次的安全防护和准入机制、多租户应用支撑能力、透明的服务注册和服务发现机制、内建智能负载均衡器、强大的故障发现和自我修复能力、服务滚动升级和在线扩容能力、可扩展的资源自动调度机制，以及多粒度的资源配额管理能力。</p>
+<p>本次以 HDFS 为例，将 HDFS 迁移到 K8S 环境下。</p>
+<h2 id="1-Statefulset"><a href="#1-Statefulset" class="headerlink" title="1. Statefulset"></a>1. Statefulset</h2><p>Statefulset 是kubernetes 中资源对象的一种，它是为了解决有状态服务的问题（对应Deployments和ReplicaSets是为无状态服务而设计），其应用场景包括：</p>
+<ul>
+<li>稳定的持久化存储，即Pod重新调度后还是能访问到相同的持久化数据，基于PVC来实现</li>
+<li>稳定的网络标志，即Pod重新调度后其PodName和HostName不变，基于Headless Service（即没有Cluster IP的Service）来实现</li>
+<li>有序部署，有序扩展，即Pod是有顺序的，在部署或者扩展的时候要依据定义的顺序依次依次进行（即从0到N-1，在下一个Pod运行之前所有之前的Pod必须都是Running和Ready状态），基于init containers来实现</li>
+<li>有序收缩，有序删除（即从N-1到0）</li>
+</ul>
+<p>应用采用 StatefulSet 方式部署后，DNS 解析的时候是可以解析到 Pod。StatefulSet 中每个 Pod 的 DNS 格式为 statefulSetName-{0..N-1}.serviceName.namespace.svc.cluster.local，其中：</p>
+<ul>
+<li>serviceName 为 Headless Service 的名字</li>
+<li>0..N-1为 Pod 所在的序号，从0开始到N-1</li>
+<li>statefulSetName 为 StatefulSet 的名字</li>
+<li>namespace 为服务所在的 namespace，Headless Servic 和 StatefulSet必须在相同的namespace</li>
+<li>.cluster.local 为 Cluster Domain</li>
+</ul>
+<h2 id="2-Headless-Service"><a href="#2-Headless-Service" class="headerlink" title="2. Headless Service"></a>2. Headless Service</h2><p>Headless Service 是没有 ClusterIP 的 Service，StatefulSet 必须与 Headless Service 配合使用。</p>
+<h2 id="3-部署HDFS"><a href="#3-部署HDFS" class="headerlink" title="3. 部署HDFS"></a>3. 部署HDFS</h2><p>因为 namenode 和 datanode 之间必须要有稳定的网络标识，因此采用StatefulSet的方式进行部署。</p>
+<h3 id="1-namenode"><a href="#1-namenode" class="headerlink" title="(1) namenode"></a>(1) namenode</h3><p>namenode 的 yaml 文件如下所示：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  name: namenode</span><br><span class="line">spec:</span><br><span class="line">  ports:</span><br><span class="line">  - port: 50070</span><br><span class="line">    targetPort: 50070</span><br><span class="line">  clusterIP: None</span><br><span class="line">  selector:</span><br><span class="line">    app: namenode</span><br><span class="line">---</span><br><span class="line">apiVersion: apps/v1beta1</span><br><span class="line">kind: StatefulSet</span><br><span class="line">metadata:</span><br><span class="line">  name: namenode-ss</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  serviceName: <span class="string">"namenode"</span></span><br><span class="line">  selector:</span><br><span class="line">     matchLabels:</span><br><span class="line">             app: namenode</span><br><span class="line">  template:</span><br><span class="line">     metadata:</span><br><span class="line">       labels:</span><br><span class="line">          app: namenode</span><br><span class="line">     spec:</span><br><span class="line">       nodeSelector:</span><br><span class="line">            harole: slave4</span><br><span class="line">       containers:</span><br><span class="line">       - name: namenode-con</span><br><span class="line">         <span class="comment">#imagePullPolicy: IfNotPresent</span></span><br><span class="line">         image: 10.0.3.6:5000/bigdata/namenode:2.6.5_1</span><br><span class="line">         ports:</span><br><span class="line">         - containerPort: 50070</span><br><span class="line">         env:</span><br><span class="line">         - name: CORE_CONF_fs_defaultFS</span><br><span class="line">           value: <span class="string">"hdfs://namenode:9000"</span></span><br><span class="line">         - name: YARN_CONF_yarn_resourcemanager_hostname</span><br><span class="line">           value: <span class="string">"resourcemanager"</span></span><br><span class="line">         volumeMounts:</span><br><span class="line">         - name: namenode-volume</span><br><span class="line">           mountPath: /home1/hadoop_tmp</span><br><span class="line">       volumes:</span><br><span class="line">         - name: namenode-volume</span><br><span class="line">           hostPath:</span><br><span class="line">               path: /home/panfan/k8s_namenode</span><br></pre></td></tr></table></figure>
+<h3 id="2-datanode"><a href="#2-datanode" class="headerlink" title="(2) datanode"></a>(2) datanode</h3><p>datanode 的 yaml 文件如下：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  name: datanode</span><br><span class="line">spec:</span><br><span class="line">  ports:</span><br><span class="line">  - port: 22</span><br><span class="line">    targetPort: 22</span><br><span class="line">  clusterIP: None</span><br><span class="line">  selector:</span><br><span class="line">    app: datanode</span><br><span class="line">---</span><br><span class="line">apiVersion: apps/v1beta1</span><br><span class="line">kind: StatefulSet</span><br><span class="line">metadata:</span><br><span class="line">  name: datanode1-ss</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  serviceName: <span class="string">"datanode"</span></span><br><span class="line">  selector:</span><br><span class="line">     matchLabels:</span><br><span class="line">             app: datanode</span><br><span class="line">  template:</span><br><span class="line">     metadata:</span><br><span class="line">       labels:</span><br><span class="line">          app: datanode</span><br><span class="line">     spec:</span><br><span class="line">       nodeSelector:</span><br><span class="line">          harole: slave60</span><br><span class="line">       containers:</span><br><span class="line">       - name: datanode1-con</span><br><span class="line">         imagePullPolicy: IfNotPresent</span><br><span class="line">         image: 10.0.3.6:5000/bigdata/datanode:2.6.5_1</span><br><span class="line">         ports:</span><br><span class="line">         - containerPort: 22</span><br><span class="line">         env:</span><br><span class="line">         - name: CORE_CONF_fs_defaultFS</span><br><span class="line">           value: <span class="string">"hdfs://namenode:9000"</span></span><br><span class="line">         - name: YARN_CONF_yarn_resourcemanager_hostname</span><br><span class="line">           value: <span class="string">"resourcemanager"</span></span><br><span class="line">         volumeMounts:</span><br><span class="line">         - name: datanode1-volume</span><br><span class="line">           mountPath: /datanode</span><br><span class="line">       volumes:</span><br><span class="line">         - name: datanode1-volume</span><br><span class="line">           hostPath:</span><br><span class="line">              path: /home/panfan/k8s_datanode</span><br><span class="line">              </span><br><span class="line">---</span><br><span class="line">apiVersion: apps/v1beta1</span><br><span class="line">kind: StatefulSet</span><br><span class="line">metadata:</span><br><span class="line">  name: datanode2-ss</span><br><span class="line">spec:</span><br><span class="line">  replicas: 1</span><br><span class="line">  serviceName: <span class="string">"datanode"</span></span><br><span class="line">  selector:</span><br><span class="line">     matchLabels:</span><br><span class="line">             app: datanode</span><br><span class="line">  template:</span><br><span class="line">     metadata:</span><br><span class="line">       labels:</span><br><span class="line">          app: datanode</span><br><span class="line">     spec:</span><br><span class="line">       nodeSelector:</span><br><span class="line">           harole: slave4</span><br><span class="line">       containers:</span><br><span class="line">       - name: datanode2-con</span><br><span class="line">         imagePullPolicy: IfNotPresent</span><br><span class="line">         image: 10.0.3.6:5000/bigdata/datanode:2.6.5</span><br><span class="line">         ports:</span><br><span class="line">         - containerPort: 22</span><br><span class="line">         env:</span><br><span class="line">         - name: CORE_CONF_fs_defaultFS</span><br><span class="line">           value: <span class="string">"hdfs://namenode:9000"</span></span><br><span class="line">         - name: YARN_CONF_yarn_resourcemanager_hostname</span><br><span class="line">           value: <span class="string">"resourcemanager"</span></span><br><span class="line">         volumeMounts:</span><br><span class="line">         - name: datanode2-volume</span><br><span class="line">           mountPath: /datanode</span><br><span class="line">       volumes:</span><br><span class="line">         - name: datanode2-volume</span><br><span class="line">           hostPath:</span><br><span class="line">              path: /home/panfan/k8s_datanode</span><br></pre></td></tr></table></figure>
+<h3 id="3-一些说明"><a href="#3-一些说明" class="headerlink" title="(3) 一些说明"></a>(3) 一些说明</h3><ul>
+<li><p>持久化存储：对于持久化存储，一般采用PV和PVC实现。k8s 目前支持多种 PV 类型，如 NFS、CephFS、GlusterFS。 这个地方，我没考虑使用这些后端存储，因为HDFS本身也是一种分布式文件系统，现在的做法相当于是干涉K8S对POD的调度，指定每个datanode调度到哪些物理节点上，然后用hostPath的方式将需要持久化的数据挂载到这些物理节点上。</p>
+</li>
+<li><p>daemonset: 是K8S在v1.2版本新增的一种资源对象，可以保证在集群的每个Node节点上仅运行一个POD副本实例。之前也试过采用这种方式 ，但是报错，为什么呢？ 因为daemonset这种方式下部署的POD没有稳定的网络标识，它不是Statefulset，这样namenode 会报错无法解析 datanode 地址。如果要试一下daemonset 这种方式来部署datanode，可以尝试一下将datanode的network改为host模式。</p>
+</li>
+<li><p>外界访问: 因为是采用Headless Service进行部署的，这种 Service 没有Cluster IP，那么对于外部而言，要如何访问我们这里的 HDFS 服务呢？很简单，重新写一个普通的service，该service要能够筛选出刚才我们的namenode，通过该service的nodePort将namenode的服务出来。如下所示：</p>
+</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">    name: namenode-svc</span><br><span class="line">spec:</span><br><span class="line">    <span class="built_in">type</span>: NodePort</span><br><span class="line">    ports:</span><br><span class="line">    - port: 50070</span><br><span class="line">      targetPort: 50070</span><br><span class="line">      nodePort: 30003</span><br><span class="line">    selector:</span><br><span class="line">      app: namenode</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+          
+            <a href="/tags/Bigdata/" rel="tag"># Bigdata</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/22/Kubernetes1-9-6部署（二）/" rel="next" title="Kubernetes1.9.6部署（二）">
+                <i class="fa fa-chevron-left"></i> Kubernetes1.9.6部署（二）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="panhuafan" />
+            
+              <p class="site-author-name" itemprop="name">panhuafan</p>
+              <p class="site-description motion-element" itemprop="description">像一出默剧 视线有雾气</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/panhuafan" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:panhuafan@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Statefulset"><span class="nav-number">1.</span> <span class="nav-text">1. Statefulset</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Headless-Service"><span class="nav-number">2.</span> <span class="nav-text">2. Headless Service</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-部署HDFS"><span class="nav-number">3.</span> <span class="nav-text">3. 部署HDFS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-namenode"><span class="nav-number">3.1.</span> <span class="nav-text">(1) namenode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-datanode"><span class="nav-number">3.2.</span> <span class="nav-text">(2) datanode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-一些说明"><span class="nav-number">3.3.</span> <span class="nav-text">(3) 一些说明</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">panhuafan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

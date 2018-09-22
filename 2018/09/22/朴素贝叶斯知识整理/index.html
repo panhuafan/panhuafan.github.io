@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Machine Learning," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="以下内容为来自网上各类资料的知识整理。刚好最近做了关于贝叶斯的报告，因此记录下来，方便以后进行回顾。  1. 前言在进入正题之前，让我们先聊点关于贝叶斯的历史。 (1) 历史贝叶斯定理由18世纪的英国数学家托马斯·贝叶斯（Thomas Bayes）提出。贝叶斯定理源于他生前为解决一个“逆概”问题写的一篇文章,而这篇文章是在他死后才由他的一位朋友发表出来的。贝叶斯在写这篇文章之前，人们已经能够计算">
+<meta name="keywords" content="Machine Learning">
+<meta property="og:type" content="article">
+<meta property="og:title" content="朴素贝叶斯知识整理">
+<meta property="og:url" content="http://yoursite.com/2018/09/22/朴素贝叶斯知识整理/index.html">
+<meta property="og:site_name" content="Heaven or Hell">
+<meta property="og:description" content="以下内容为来自网上各类资料的知识整理。刚好最近做了关于贝叶斯的报告，因此记录下来，方便以后进行回顾。  1. 前言在进入正题之前，让我们先聊点关于贝叶斯的历史。 (1) 历史贝叶斯定理由18世纪的英国数学家托马斯·贝叶斯（Thomas Bayes）提出。贝叶斯定理源于他生前为解决一个“逆概”问题写的一篇文章,而这篇文章是在他死后才由他的一位朋友发表出来的。贝叶斯在写这篇文章之前，人们已经能够计算">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$$&space;P(A|B)=\frac{P(AB)}{P(B)}&space;$$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$$&space;P(A)=\sum_{i=1}^nP(A|B_i)P(B_i)$$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$$P(B|A)=\frac{P(A|B)P(B)}{P(A)}$$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$$P(B_i|A)=\frac{P(A|B_i)P(B)}{\sum_{i=1}^nP(A|B_i)P(B_i)}$$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$x=\lbrace&space;a_1,a_2,...,a_m\rbrace&space;$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$C=\lbrace&space;y_1,y_2,...,y_n\rbrace$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$P(y_1|x),P(y_2|x),...P(y_n|x)$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$P(y_k|x)&space;=&space;max\lbrace&space;P(y_1|x),P(y_2|x),...,P(y_n|x)\rbrace$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$x=y_k$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$P(a_1|y_1),P(a_2|y_2),...,P(a_m|y_n)$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$$&space;P(y_i|x)=\frac{P(x|y_i)P(y_i)}{P(x)}$$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$P(x|y_i)P(y_i)$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$P(a_1,a_2,...,a_m|y_i)P(y_i)$">
+<meta property="og:image" content="https://latex.codecogs.com/gif.latex?$$P(a_1,a_2,...,a_m|y_i)P(y_i)=P(a_1|y_i)P(a_2|y_i)...P(a_m|y_i)$$">
+<meta property="og:image" content="http://chuantu.biz/t6/290/1524201082x-1566688263.png">
+<meta property="og:updated_time" content="2018-09-22T08:23:10.132Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="朴素贝叶斯知识整理">
+<meta name="twitter:description" content="以下内容为来自网上各类资料的知识整理。刚好最近做了关于贝叶斯的报告，因此记录下来，方便以后进行回顾。  1. 前言在进入正题之前，让我们先聊点关于贝叶斯的历史。 (1) 历史贝叶斯定理由18世纪的英国数学家托马斯·贝叶斯（Thomas Bayes）提出。贝叶斯定理源于他生前为解决一个“逆概”问题写的一篇文章,而这篇文章是在他死后才由他的一位朋友发表出来的。贝叶斯在写这篇文章之前，人们已经能够计算">
+<meta name="twitter:image" content="https://latex.codecogs.com/gif.latex?$$&space;P(A|B)=\frac{P(AB)}{P(B)}&space;$$">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/09/22/朴素贝叶斯知识整理/"/>
+
+
+
+
+
+  <title>朴素贝叶斯知识整理 | Heaven or Hell</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Heaven or Hell</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/22/朴素贝叶斯知识整理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="panhuafan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Heaven or Hell">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">朴素贝叶斯知识整理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-22T16:22:01+08:00">
+                2018-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Machine-Learning/" itemprop="url" rel="index">
+                    <span itemprop="name">Machine Learning</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>以下内容为来自网上各类资料的知识整理。刚好最近做了关于贝叶斯的报告，因此记录下来，方便以后进行回顾。</p>
+</blockquote>
+<h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><p>在进入正题之前，让我们先聊点关于贝叶斯的历史。</p>
+<h3 id="1-历史"><a href="#1-历史" class="headerlink" title="(1) 历史"></a>(1) 历史</h3><p>贝叶斯定理由18世纪的英国数学家托马斯·贝叶斯（Thomas Bayes）提出。贝叶斯定理源于他生前为解决一个“逆概”问题写的一篇文章,而这篇文章是在他死后才由他的一位朋友发表出来的。贝叶斯在写这篇文章之前，人们已经能够计算“正向概率”，如“假设袋子里面有N个白球，M个黑球，你伸手进去摸一把，摸出黑球的概率是多大”。那么我们自然而言地想到了另一个问题，“如果我们事先并不知道袋子里面黑白球的比例，而是闭着眼睛摸出一个（或好几个）球，观察这些取出来的球的颜色之后，那么我们可以就此对袋子里面的黑白球的比例作出什么样的推测”这个问题，就是所谓的逆向概率问题。<br>贝叶斯定理的思想出现在18世纪，但真正大规模派上用途还得等到计算机的出现。因为这个定理需要大规模的数据计算推理才能凸显效果，它在很多计算机应用领域中都大有作为，如模式识别，机器学习，博弈论等。</p>
+<h3 id="2-公式"><a href="#2-公式" class="headerlink" title="(2) 公式"></a>(2) 公式</h3><p>接下来是一些很简单的概率公式：</p>
+<ul>
+<li>条件概率(表示事件B发生下事件A发生的概率)</li>
+</ul>
+<p align="center"><img src="https://latex.codecogs.com/gif.latex?$$&space;P(A|B)=\frac{P(AB)}{P(B)}&space;$$" title="$$ P(A|B)=\frac{P(AB)}{P(B)} $$"></p>
+
+<ul>
+<li><p>全概率公式</p>
+<p align="center"><img src="https://latex.codecogs.com/gif.latex?$$&space;P(A)=\sum_{i=1}^nP(A|B_i)P(B_i)$$" title="$$ P(A)=\sum_{i=1}^nP(A|B_i)P(B_i)$$"></p>
+</li>
+<li><p>贝叶斯公式</p>
+<p align="center"><img src="https://latex.codecogs.com/gif.latex?$$P(B|A)=\frac{P(A|B)P(B)}{P(A)}$$" title="$$P(B|A)=\frac{P(A|B)P(B)}{P(A)}$$"></p><br><p align="center"><img src="https://latex.codecogs.com/gif.latex?$$P(B_i|A)=\frac{P(A|B_i)P(B)}{\sum_{i=1}^nP(A|B_i)P(B_i)}$$" title="$$P(B_i|A)=\frac{P(A|B_i)P(B)}{\sum_{i=1}^nP(A|B_i)P(B_i)}$$"></p>
+
+
+</li>
+</ul>
+<h3 id="3-一个例子"><a href="#3-一个例子" class="headerlink" title="(3) 一个例子"></a>(3) 一个例子</h3><p>现在有两个一模一样的碗，1号碗有30颗水果糖和10颗巧克力糖，2号碗有20颗水果糖和20颗巧克力糖。现在从中摸出一颗糖，该水果糖来自1号碗的概率是多少？<br>这个问题是在是太简单了，这里就不再给出计算过程，运用上面的公式可以计算出概率为0.6.</p>
+<h3 id="4-学派之争"><a href="#4-学派之争" class="headerlink" title="(4) 学派之争"></a>(4) 学派之争</h3><p>了解贝叶斯学派的思想观点可以帮助我们更好地理解贝叶斯算法。<br>贝叶斯学派和频率学派相比，最有区分的一点是，它强调概率的“主观性”。也就是：</p>
+<ul>
+<li>频率学派强调频率的“自然属性”，认为应该使用事件在重复试验中发生的频率作为其发生的概率的估计。</li>
+<li>贝叶斯学派不强调事件的“客观随机性”，认为仅仅只是“观察者”不知道事件的结果。也就是说，贝叶斯学派认为：事件之所以具有随机性仅仅是因为“观察者”的知识不够完备，对于“知情者”来说，该事件其实不具备随机性。随机性的根源不在于事件，而在于“观察者”对该事件的知识状态。</li>
+</ul>
+<p>例子：一个人抛了一枚均匀硬币到地上并迅速将其踩在脚底。在他前面从近到远坐了三个人。他本人看到了硬币是正面朝上的，其他三个人也多多少少看到了一些信息，但显然坐的越远、看得就越模糊。频率学派认为，无论硬币是正是反，各自的概率都应该是50%；但是贝叶斯学派会认为，对抛硬币的人来说，硬币是正面的概率就是100%，然后可能对离他最近的人来说是80%、对离他最远的人来说可能是50%。<br>在刚才的例子中，样本就是抛出去的那枚硬币，模型的参数就是每个人从中获得“信息”。对于频率学派而言，每个人获得的“信息”不应该不同，所以认为“均匀硬币抛出正面概率为50%”。但是对于贝叶斯学派而言，硬币抛出去就抛出去了，问题的关键在于模型的参数、即“观察者”从中获取的信息，所以会得出“对抛硬币的人而言，硬币是正面的概率是100%”这一结论。<br>在了解了贝叶斯的历史背景和思想之后，接下来让我们开始正儿八经学习一下贝叶斯分类。</p>
+<h2 id="2-贝叶斯分类"><a href="#2-贝叶斯分类" class="headerlink" title="2. 贝叶斯分类"></a>2. 贝叶斯分类</h2><h3 id="1-朴素贝叶斯"><a href="#1-朴素贝叶斯" class="headerlink" title="(1) 朴素贝叶斯"></a>(1) 朴素贝叶斯</h3><ul>
+<li>设 <img src="https://latex.codecogs.com/gif.latex?$x=\lbrace&space;a_1,a_2,...,a_m\rbrace&space;$" title="$x=\lbrace a_1,a_2,...,a_m\rbrace $">为一个待分类项，而每个a为x的一个特征属性</li>
+<li>有类别集合 <img src="https://latex.codecogs.com/gif.latex?$C=\lbrace&space;y_1,y_2,...,y_n\rbrace$" title="$C=\lbrace y_1,y_2,...,y_n\rbrace$"></li>
+<li>计算 <img src="https://latex.codecogs.com/gif.latex?$P(y_1|x),P(y_2|x),...P(y_n|x)$" title="$P(y_1|x),P(y_2|x),...P(y_n|x)$"></li>
+<li>如果<img src="https://latex.codecogs.com/gif.latex?$P(y_k|x)&space;=&space;max\lbrace&space;P(y_1|x),P(y_2|x),...,P(y_n|x)\rbrace$" title="$P(y_k|x) = max\lbrace P(y_1|x),P(y_2|x),...,P(y_n|x)\rbrace$">，则<img src="https://latex.codecogs.com/gif.latex?$x=y_k$" title="$x=y_k$"></li>
+</ul>
+<p>那么如何计算第三步中的各个条件概率呢？？？<br>一般情况下，我们采取如下的做法：</p>
+<ul>
+<li><p>找到一个已知分类的待分类项集合，这个集合叫做训练样本集。</p>
+</li>
+<li><p>统计得到在各个类别下各个特征属性的条件概率估计。 即 <img src="https://latex.codecogs.com/gif.latex?$P(a_1|y_1),P(a_2|y_2),...,P(a_m|y_n)$" title="$P(a_1|y_1),P(a_2|y_2),...,P(a_m|y_n)$"></p>
+</li>
+<li><p>根据贝叶斯定理</p>
+<p align="center"><img src="https://latex.codecogs.com/gif.latex?$$&space;P(y_i|x)=\frac{P(x|y_i)P(y_i)}{P(x)}$$" title="$$ P(y_i|x)=\frac{P(x|y_i)P(y_i)}{P(x)}$$"></p>
+
+</li>
+</ul>
+<p>因为在实际进行比较的过程中，分母都是相同的，所以我们只需考虑分子的大小即 <img src="https://latex.codecogs.com/gif.latex?$P(x|y_i)P(y_i)$" title="$P(x|y_i)P(y_i)$"><br>也就是</p>
+<p align="center"><img src="https://latex.codecogs.com/gif.latex?$P(a_1,a_2,...,a_m|y_i)P(y_i)$" title="$P(a_1,a_2,...,a_m|y_i)P(y_i)$"></p>
+
+<p>在朴素贝叶斯中，假设各个特征属性条件独立，即：</p>
+<p align="center"><img src="https://latex.codecogs.com/gif.latex?$$P(a_1,a_2,...,a_m|y_i)P(y_i)=P(a_1|y_i)P(a_2|y_i)...P(a_m|y_i)$$" title="$$P(a_1,a_2,...,a_m|y_i)P(y_i)=P(a_1|y_i)P(a_2|y_i)...P(a_m|y_i)$$"></p>
+
+<h3 id="2-朴素贝叶斯分类流程图"><a href="#2-朴素贝叶斯分类流程图" class="headerlink" title="(2)朴素贝叶斯分类流程图"></a>(2)朴素贝叶斯分类流程图</h3><p><img src="http://chuantu.biz/t6/290/1524201082x-1566688263.png" alt="朴素贝叶斯分类流程图"></p>
+<h3 id="3-一个分类实例"><a href="#3-一个分类实例" class="headerlink" title="(3)一个分类实例"></a>(3)一个分类实例</h3><p>大家都爱吃苹果，那么在选购苹果的时候如何判断一个苹果的好坏呢？这里我们的统计样本中根据以下几个特征来区分苹果是好是坏.</p>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>大小</th>
+<th>颜色</th>
+<th>形状</th>
+<th>好果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>小</td>
+<td>青色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>2</td>
+<td>大</td>
+<td>红色</td>
+<td>非规则</td>
+<td>是</td>
+</tr>
+<tr>
+<td>3</td>
+<td>大</td>
+<td>红色</td>
+<td>圆形</td>
+<td>是</td>
+</tr>
+<tr>
+<td>4</td>
+<td>大</td>
+<td>青色</td>
+<td>圆形</td>
+<td>否</td>
+</tr>
+<tr>
+<td>5</td>
+<td>大</td>
+<td>青色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>6</td>
+<td>小</td>
+<td>红色</td>
+<td>圆形</td>
+<td>是</td>
+</tr>
+<tr>
+<td>7</td>
+<td>大</td>
+<td>青色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>8</td>
+<td>小</td>
+<td>红色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>9</td>
+<td>小</td>
+<td>青色</td>
+<td>圆形</td>
+<td>否</td>
+</tr>
+<tr>
+<td>10</td>
+<td>大</td>
+<td>红色</td>
+<td>圆形</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<p>现在已知有一个大、红色、圆形的苹果，求该苹果是好果的概率是多少？</p>
+<p>P(好果|大，红，圆)=P(大，红，圆|好果)P(好果)/P(大，红，圆)<br>             =P(大|好果)P(红|好果)P(圆|好果)P(好果)/P(大，红，圆)</p>
+<p>P(坏果|大，红，圆)=P(大，红，圆|坏果)P(坏果)/P(大，红，圆)<br>             =P(大|坏果)P(红|坏果)P(圆|坏果)P(坏果)/P(大，红，圆)</p>
+<p>因为分母都相同，所以我们直接比较分子大小即可。</p>
+<p>P(大|好果)P(红|好果)P(圆|好果)P(好果)=0.225</p>
+<p>P(大|坏果)P(红|坏果)P(圆|坏果)P(坏果)=0.0167</p>
+<p>计算出来该苹果是好果的概率更大。</p>
+<h3 id="4-拉普拉斯平滑"><a href="#4-拉普拉斯平滑" class="headerlink" title="(4) 拉普拉斯平滑"></a>(4) 拉普拉斯平滑</h3><p>依旧是这些统计样本，我们现在还有一个苹果，其特征分别为大、青色、圆形，同样计算该苹果是好果的概率是多少？</p>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>大小</th>
+<th>颜色</th>
+<th>形状</th>
+<th>好果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>小</td>
+<td>青色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>2</td>
+<td>大</td>
+<td>红色</td>
+<td>非规则</td>
+<td>是</td>
+</tr>
+<tr>
+<td>3</td>
+<td>大</td>
+<td>红色</td>
+<td>圆形</td>
+<td>是</td>
+</tr>
+<tr>
+<td>4</td>
+<td>大</td>
+<td>青色</td>
+<td>圆形</td>
+<td>否</td>
+</tr>
+<tr>
+<td>5</td>
+<td>大</td>
+<td>青色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>6</td>
+<td>小</td>
+<td>红色</td>
+<td>圆形</td>
+<td>是</td>
+</tr>
+<tr>
+<td>7</td>
+<td>大</td>
+<td>青色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>8</td>
+<td>小</td>
+<td>红色</td>
+<td>非规则</td>
+<td>否</td>
+</tr>
+<tr>
+<td>9</td>
+<td>小</td>
+<td>青色</td>
+<td>圆形</td>
+<td>否</td>
+</tr>
+<tr>
+<td>10</td>
+<td>大</td>
+<td>红色</td>
+<td>圆形</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<p>P(好果|大，青，圆)=P(大，青，圆|好果)P(好果)/P(大，青，圆)<br>                  =P(大|好果)P(青|好果)P(圆|好果)P(好果)/P(大，青，圆)</p>
+<p>我们注意到，这里P(青|好果)在统计样本中是没有出现的，那么怎么办呢？难道为0吗？</p>
+<p>通过以上例子，我们发现一个问题：在训练集中，很多样本的取值可能并不在其中。但是这并不代表这种情况发生的概率为0，不能因为未被观测，就判断其不可能发生。<br>为了解决这个问题，我们引入拉普拉斯平滑。它的思想很简单，就是对没类别下所有划分的计数加1。当训练样本集数量充分大时，并不会对结果产生影响，并且解决了上述频率为0的尴尬局面。(分子统一全部加1，分母加相应特征的取值个数)</p>
+<p>对应这个例子而言，<br>P(好果|大，青，圆)=P(大，青，圆|好果)P(好果)/P(大，青，圆)<br>             =P(大|好果)P(青|好果)P(圆|好果)P(好果)/P(大，青，圆)</p>
+<p>P(大|好果)=(3+1)/(4+2)(分子统一加1，分母呢？因为好果这个特征对应的取值个数就只有两种，要么好果，要么坏果，所以加2)</p>
+<p>P(好果)=(4+1)/(10+2)(同样的，分子加1，分母原来为10，表示总的统计样本个数为10，而要么好果要么坏果，就这俩取值，所以同样加2)</p>
+<p>对于以上式子，</p>
+<p>P(青|好果)=(0+1)/(4+2) </p>
+<p>P(圆|好果)=(3+1)/(4+2)</p>
+<h3 id="5-总结"><a href="#5-总结" class="headerlink" title="(5) 总结"></a>(5) 总结</h3><p>朴素贝叶斯算法优点：</p>
+<ul>
+<li>算法逻辑简单，易于实现</li>
+<li>分类过程时空开销小</li>
+<li>算法稳定，对于不同特点的数据其分类性能差别不大，健壮性较好。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Machine-Learning/" rel="tag"># Machine Learning</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/22/关于Docker存储驱动/" rel="next" title="关于Docker存储驱动">
+                <i class="fa fa-chevron-left"></i> 关于Docker存储驱动
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/09/22/Kubernetes1-9-6部署（一）/" rel="prev" title="Kubernetes1.9.6部署（一）">
+                Kubernetes1.9.6部署（一） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="panhuafan" />
+            
+              <p class="site-author-name" itemprop="name">panhuafan</p>
+              <p class="site-description motion-element" itemprop="description">像一出默剧 视线有雾气</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/panhuafan" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:panhuafan@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-前言"><span class="nav-number">1.</span> <span class="nav-text">1. 前言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-历史"><span class="nav-number">1.1.</span> <span class="nav-text">(1) 历史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-公式"><span class="nav-number">1.2.</span> <span class="nav-text">(2) 公式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-一个例子"><span class="nav-number">1.3.</span> <span class="nav-text">(3) 一个例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-学派之争"><span class="nav-number">1.4.</span> <span class="nav-text">(4) 学派之争</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-贝叶斯分类"><span class="nav-number">2.</span> <span class="nav-text">2. 贝叶斯分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-朴素贝叶斯"><span class="nav-number">2.1.</span> <span class="nav-text">(1) 朴素贝叶斯</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-朴素贝叶斯分类流程图"><span class="nav-number">2.2.</span> <span class="nav-text">(2)朴素贝叶斯分类流程图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-一个分类实例"><span class="nav-number">2.3.</span> <span class="nav-text">(3)一个分类实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-拉普拉斯平滑"><span class="nav-number">2.4.</span> <span class="nav-text">(4) 拉普拉斯平滑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-总结"><span class="nav-number">2.5.</span> <span class="nav-text">(5) 总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">panhuafan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

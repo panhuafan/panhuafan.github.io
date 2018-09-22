@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Kubernetes," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一、部署Calico服务1.1 修改Kubernetes服务的启动参数，并重启服务。 设置 Master 上 kube-apiserver 服务的启动参数：–allow-privileged=true，calico-node 需要以特权模式运行在各 Node 上。 设置各 Node 上 kubelet 服务的启动参数：–network-plugin=cni  1.2 修改 calico.yaml">
+<meta name="keywords" content="Kubernetes">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes1.9.6部署（二）">
+<meta property="og:url" content="http://yoursite.com/2018/09/22/Kubernetes1-9-6部署（二）/index.html">
+<meta property="og:site_name" content="Heaven or Hell">
+<meta property="og:description" content="一、部署Calico服务1.1 修改Kubernetes服务的启动参数，并重启服务。 设置 Master 上 kube-apiserver 服务的启动参数：–allow-privileged=true，calico-node 需要以特权模式运行在各 Node 上。 设置各 Node 上 kubelet 服务的启动参数：–network-plugin=cni  1.2 修改 calico.yaml">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://chuantu.biz/t6/302/1525424678x-1376440228.png">
+<meta property="og:image" content="http://chuantu.biz/t6/302/1525425103x-1376440228.png">
+<meta property="og:image" content="http://chuantu.biz/t6/302/1525425169x-1566688269.png">
+<meta property="og:updated_time" content="2018-09-22T08:32:39.749Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes1.9.6部署（二）">
+<meta name="twitter:description" content="一、部署Calico服务1.1 修改Kubernetes服务的启动参数，并重启服务。 设置 Master 上 kube-apiserver 服务的启动参数：–allow-privileged=true，calico-node 需要以特权模式运行在各 Node 上。 设置各 Node 上 kubelet 服务的启动参数：–network-plugin=cni  1.2 修改 calico.yaml">
+<meta name="twitter:image" content="http://chuantu.biz/t6/302/1525424678x-1376440228.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/09/22/Kubernetes1-9-6部署（二）/"/>
+
+
+
+
+
+  <title>Kubernetes1.9.6部署（二） | Heaven or Hell</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Heaven or Hell</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/22/Kubernetes1-9-6部署（二）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="panhuafan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Heaven or Hell">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Kubernetes1.9.6部署（二）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-22T16:32:04+08:00">
+                2018-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Kubernetes/" itemprop="url" rel="index">
+                    <span itemprop="name">Kubernetes</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="一、部署Calico服务"><a href="#一、部署Calico服务" class="headerlink" title="一、部署Calico服务"></a>一、部署Calico服务</h2><h3 id="1-1-修改Kubernetes服务的启动参数，并重启服务。"><a href="#1-1-修改Kubernetes服务的启动参数，并重启服务。" class="headerlink" title="1.1 修改Kubernetes服务的启动参数，并重启服务。"></a>1.1 修改Kubernetes服务的启动参数，并重启服务。</h3><ul>
+<li>设置 Master 上 kube-apiserver 服务的启动参数：–allow-privileged=true，calico-node 需要以特权模式运行在各 Node 上。</li>
+<li>设置各 Node 上 kubelet 服务的启动参数：–network-plugin=cni</li>
+</ul>
+<h3 id="1-2-修改-calico-yaml-文件"><a href="#1-2-修改-calico-yaml-文件" class="headerlink" title="1.2 修改 calico.yaml 文件"></a>1.2 修改 calico.yaml 文件</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#获取calico.yaml</span></span><br><span class="line">wget https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/calico.yaml</span><br><span class="line"></span><br><span class="line"><span class="comment">#修改calico.yaml文件</span></span><br><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line">sed -i <span class="string">'s@.*etcd_endpoints:.*@\ \ etcd_endpoints:\ \"https://10.0.3.6:2379\"@gi'</span> calico.yaml</span><br><span class="line"></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="built_in">export</span> ETCD_CERT=`cat /etc/kubernetes/ssl/kubernetes.pem | base64 | tr -d <span class="string">'\n'</span>`</span><br><span class="line"><span class="built_in">export</span> ETCD_KEY=`cat /etc/kubernetes/ssl/kubernetes-key.pem | base64 | tr -d <span class="string">'\n'</span>`</span><br><span class="line"><span class="built_in">export</span> ETCD_CA=`cat /etc/kubernetes/ssl/ca.pem | base64 | tr -d <span class="string">'\n'</span>`</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">"s@.*etcd-cert:.*@\ \ etcd-cert:\ <span class="variable">$&#123;ETCD_CERT&#125;</span>@gi"</span> calico.yaml</span><br><span class="line">sed -i <span class="string">"s@.*etcd-key:.*@\ \ etcd-key:\ <span class="variable">$&#123;ETCD_KEY&#125;</span>@gi"</span> calico.yaml</span><br><span class="line">sed -i <span class="string">"s@.*etcd-ca:.*@\ \ etcd-ca:\ <span class="variable">$&#123;ETCD_CA&#125;</span>@gi"</span> calico.yaml</span><br><span class="line"></span><br><span class="line">sed -i <span class="string">'s@.*etcd_ca:.*@\ \ etcd_ca:\ "/calico-secrets/etcd-ca"@gi'</span> calico.yaml</span><br><span class="line">sed -i <span class="string">'s@.*etcd_cert:.*@\ \ etcd_cert:\ "/calico-secrets/etcd-cert"@gi'</span> calico.yaml</span><br><span class="line">sed -i <span class="string">'s@.*etcd_key:.*@\ \ etcd_key:\ "/calico-secrets/etcd-key"@gi'</span> calico.yaml</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong><br><strong>如果开启了 RBAC 访问控制，还需要进行角色绑定，赋予相应权限：</strong></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://github.com/projectcalico/calico/blob/master/v3.1/getting-started/kubernetes/installation/rbac.yaml</span><br></pre></td></tr></table></figure>
+<h3 id="1-3-部署-calico-服务"><a href="#1-3-部署-calico-服务" class="headerlink" title="1.3 部署 calico 服务"></a>1.3 部署 calico 服务</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl create -f calico.yaml</span><br><span class="line">kubectl create -f rbac.yaml</span><br></pre></td></tr></table></figure>
+<h2 id="二、部署-kube-dns-服务"><a href="#二、部署-kube-dns-服务" class="headerlink" title="二、部署 kube-dns 服务"></a>二、部署 kube-dns 服务</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#获取DNS的yaml文件</span></span><br><span class="line">wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/dns/kube-dns.yaml.sed</span><br><span class="line">mv kube-dns.yaml.sed kube-dns.yaml</span><br><span class="line"></span><br><span class="line"><span class="comment">###对DNS的yaml文件进行修改</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">sed -i <span class="string">'s/$DNS_DOMAIN/cluster.local/gi'</span> kube-dns.yaml</span><br><span class="line">sed -i <span class="string">'s/$DNS_SERVER_IP/10.254.0.100/gi'</span> kube-dns.yaml</span><br><span class="line"></span><br><span class="line"><span class="comment">#创建</span></span><br><span class="line">kubectl create -f kube-dns.yaml</span><br></pre></td></tr></table></figure>
+<h2 id="三、部署-Heapster-Influxdb-Grafana"><a href="#三、部署-Heapster-Influxdb-Grafana" class="headerlink" title="三、部署 Heapster+Influxdb+Grafana"></a>三、部署 Heapster+Influxdb+Grafana</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#获取yaml文件</span></span><br><span class="line">wget https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/influxdb/grafana.yaml</span><br><span class="line">wget https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/influxdb/heapster.yaml</span><br><span class="line">wget https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/influxdb/influxdb.yaml</span><br><span class="line">wget https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/rbac/heapster-rbac.yaml</span><br><span class="line"></span><br><span class="line"><span class="comment">#创建</span></span><br><span class="line">kubectl create -f grafana.yaml</span><br><span class="line">kubectl create -f heapster.yaml</span><br><span class="line">kubectl create -f influxdb.yaml</span><br><span class="line">kubectl create -f heapster-rbac.yaml</span><br></pre></td></tr></table></figure>
+<h2 id="四、部署Dashboard"><a href="#四、部署Dashboard" class="headerlink" title="四、部署Dashboard"></a>四、部署Dashboard</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
+<p>修改 dashboard.yaml 的 service 部分，添加端口映射暴露服务：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">kind: Service</span><br><span class="line">apiVersion: v1</span><br><span class="line">metadata:</span><br><span class="line">  labels:</span><br><span class="line">    k8s-app: kubernetes-dashboard</span><br><span class="line">  name: kubernetes-dashboard</span><br><span class="line">  namespace: kube-system</span><br><span class="line">spec:</span><br><span class="line">  <span class="built_in">type</span>: NodePort</span><br><span class="line">  ports:</span><br><span class="line">    - port: 443</span><br><span class="line">      targetPort: 8443</span><br><span class="line">      nodePort: 30001</span><br><span class="line">     <span class="comment"># protocol: TCP</span></span><br><span class="line">  selector:</span><br><span class="line">    k8s-app: kubernetes-dashboard</span><br></pre></td></tr></table></figure>
+<p>然后进行创建即可。</p>
+<p>访问 dashbord 时需要 token，通过以下方式创建admin access token：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">!/bin/bash</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> kubectl get sa dashboard-admin -n kube-system &amp;&gt; /dev/null;<span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> -e <span class="string">"\033[33mWARNING: ServiceAccount dashboard-admin exist!\033[0m"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    kubectl create sa dashboard-admin -n kube-system</span><br><span class="line">    kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kube-system:dashboard-admin</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">kubectl describe secret -n kube-system $(kubectl get secrets -n kube-system | grep dashboard-admin | cut -f1 -d <span class="string">' '</span>) | grep -E <span class="string">'^token'</span></span><br></pre></td></tr></table></figure>
+<p>执行该脚本，将生成的 token 保存下来，以后每次访问 dashboard 时会用到。</p>
+<p>在部署完成后，查看 dashboard 界面，发现收集不到容器和主机的资源使用情况，查看 dashboard 日志，发现出现 skipping metrics 等类似信息。然后在 kubernetes-dashboard.yaml 中做如下修改</p>
+<p><img src="http://chuantu.biz/t6/302/1525424678x-1376440228.png" alt="修改dashbaord"></p>
+<p>最终部署完成后 dashboard 界面如下:</p>
+<p><img src="http://chuantu.biz/t6/302/1525425103x-1376440228.png" alt="dashboard"><br><img src="http://chuantu.biz/t6/302/1525425169x-1566688269.png" alt="dashboard"></p>
+<p><em>文章参考：</em></p>
+<p><em>[1]. <a href="https://jimmysong.io/kubernetes-handbook/practice/install-kubernetes-on-centos.html" target="_blank" rel="noopener">https://jimmysong.io/kubernetes-handbook/practice/install-kubernetes-on-centos.html</a></em></p>
+<p><em>[2]. <a href="https://mritd.me/" target="_blank" rel="noopener">https://mritd.me/</a></em></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/22/Kubernetes1-9-6部署（一）/" rel="next" title="Kubernetes1.9.6部署（一）">
+                <i class="fa fa-chevron-left"></i> Kubernetes1.9.6部署（一）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/09/22/大数据平台迁移至K8S环境（以HDFS为例）/" rel="prev" title="大数据平台迁移至K8S环境（以HDFS为例）">
+                大数据平台迁移至K8S环境（以HDFS为例） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="panhuafan" />
+            
+              <p class="site-author-name" itemprop="name">panhuafan</p>
+              <p class="site-description motion-element" itemprop="description">像一出默剧 视线有雾气</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/panhuafan" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:panhuafan@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、部署Calico服务"><span class="nav-number">1.</span> <span class="nav-text">一、部署Calico服务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-修改Kubernetes服务的启动参数，并重启服务。"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 修改Kubernetes服务的启动参数，并重启服务。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-修改-calico-yaml-文件"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 修改 calico.yaml 文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-部署-calico-服务"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 部署 calico 服务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、部署-kube-dns-服务"><span class="nav-number">2.</span> <span class="nav-text">二、部署 kube-dns 服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#三、部署-Heapster-Influxdb-Grafana"><span class="nav-number">3.</span> <span class="nav-text">三、部署 Heapster+Influxdb+Grafana</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#四、部署Dashboard"><span class="nav-number">4.</span> <span class="nav-text">四、部署Dashboard</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">panhuafan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
