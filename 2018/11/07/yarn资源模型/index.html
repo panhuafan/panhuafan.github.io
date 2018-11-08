@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Bigdata," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Yarn资源模型：  客户端通知ResourceManager，它要提交一个应用程序。 ResourceManager向客户端返回一个ApplicationID以及有助于客户端请求资源的集群容量信息。 客户端提交Application Submission Context做出响应，Applicaion Submission Context中包含了ApplicationID、用户名、队列及Cont">
+<meta name="keywords" content="Bigdata">
+<meta property="og:type" content="article">
+<meta property="og:title" content="yarn资源模型">
+<meta property="og:url" content="http://yoursite.com/2018/11/07/yarn资源模型/index.html">
+<meta property="og:site_name" content="Heaven or Hell">
+<meta property="og:description" content="Yarn资源模型：  客户端通知ResourceManager，它要提交一个应用程序。 ResourceManager向客户端返回一个ApplicationID以及有助于客户端请求资源的集群容量信息。 客户端提交Application Submission Context做出响应，Applicaion Submission Context中包含了ApplicationID、用户名、队列及Cont">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/img/yarn资源模型.png">
+<meta property="og:updated_time" content="2018-11-08T04:42:54.494Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="yarn资源模型">
+<meta name="twitter:description" content="Yarn资源模型：  客户端通知ResourceManager，它要提交一个应用程序。 ResourceManager向客户端返回一个ApplicationID以及有助于客户端请求资源的集群容量信息。 客户端提交Application Submission Context做出响应，Applicaion Submission Context中包含了ApplicationID、用户名、队列及Cont">
+<meta name="twitter:image" content="http://yoursite.com/img/yarn资源模型.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/07/yarn资源模型/"/>
+
+
+
+
+
+  <title>yarn资源模型 | Heaven or Hell</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Heaven or Hell</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/07/yarn资源模型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="panhuafan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Heaven or Hell">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">yarn资源模型</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-07T23:31:53+08:00">
+                2018-11-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Bigdata/" itemprop="url" rel="index">
+                    <span itemprop="name">Bigdata</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="/img/yarn资源模型.png" alt="yarn资源模型"></p>
+<p>Yarn资源模型：</p>
+<ol>
+<li>客户端通知ResourceManager，它要提交一个应用程序。</li>
+<li>ResourceManager向客户端返回一个ApplicationID以及有助于客户端请求资源的集群容量信息。</li>
+<li>客户端提交Application Submission Context做出响应，Applicaion Submission Context中包含了ApplicationID、用户名、队列及Container Launch Context, CLC提供了资源需求、作业文件以及在节点上启动ApplicationMaster需要的其他信息。</li>
+<li>Resource Manager为Application调度一个container用于启动Application Master，该container通常称为container0。Application Master启动后，向ResourceManager进行注册。</li>
+<li>ResourceManager会发送关于集群的资源信息给Application Master，ApplicationMaster决定如何使用当前可用的资源。</li>
+<li>Application Master收到来自Resource Manager的资源报告后，会请求一定量的container.</li>
+<li>ResourceManager会基于调度策略，尽可能优的为Application Master分配Container资源。</li>
+</ol>
+<p>在作业执行过程中，Application Master会将作业的运行状况通过心跳发给Resource Manager。在这些心跳中，Application Master还可以请求和释放Container。当作业结束后，Application Master向Resource Manager发出一个Fish消息，然后退出。Resource Manager命令Node Manager杀死container。</p>
+<h2 id="1-ResourceManager"><a href="#1-ResourceManager" class="headerlink" title="1. ResourceManager"></a>1. ResourceManager</h2><h3 id="1-1-概述"><a href="#1-1-概述" class="headerlink" title="1.1 概述"></a>1.1 概述</h3><p>ResourceManager是集群资源的仲裁者，它和下面的组件一起工作：</p>
+<ul>
+<li>NodeManager，从ResourceManager中获取指令，管理单个节点上的可用资源，并接收ApplicationMaster的资源请求。</li>
+<li>ApplicationMaster，负责向ResourceManager申请资源并且和NodeManager一起工作，启动、监控和停止Container。</li>
+</ul>
+<p>ResourceMnager中有多个组件，ResourceManager在运行过程中会和Client、NodeManager、ApplcationMaster有通信交互过程。</p>
+<h3 id="1-2-ResourceManager和Client"><a href="#1-2-ResourceManager和Client" class="headerlink" title="1.2 ResourceManager和Client"></a>1.2 ResourceManager和Client</h3><h4 id="1-2-1-Client-Serivce"><a href="#1-2-1-Client-Serivce" class="headerlink" title="1.2.1 Client Serivce"></a>1.2.1 Client Serivce</h4><p>该组件处理所有来自客户端到ResourceManager的RPC通信，包括以下操作：</p>
+<ul>
+<li>应用程序提交</li>
+<li>应用程序终止</li>
+<li>获取应用程序，队列，集群统计，用户ACL及更多信息。</li>
+</ul>
+<h4 id="1-2-2-Administration-Service"><a href="#1-2-2-Administration-Service" class="headerlink" title="1.2.2 Administration Service"></a>1.2.2 Administration Service</h4><p>Client Service负责处理一般用户应用程序的提交和终止。为了确保管理员的请求不会被一般用户的请求额色，Yarn给所有的管理员操作服务提供了一个分离的接口Administration Service。</p>
+<h4 id="1-2-3-Application-ACL-Manager"><a href="#1-2-3-Application-ACL-Manager" class="headerlink" title="1.2.3 Application ACL Manager"></a>1.2.3 Application ACL Manager</h4><h4 id="1-2-4-ResourceManager-Web-Applicaition-和-Web-Service"><a href="#1-2-4-ResourceManager-Web-Applicaition-和-Web-Service" class="headerlink" title="1.2.4 ResourceManager Web Applicaition 和 Web Service"></a>1.2.4 ResourceManager Web Applicaition 和 Web Service</h4><p>ResourceManager 有一个web应用程序用来输出集群的状态信息。</p>
+<h3 id="1-3-ResourceManager-和-Application-Master"><a href="#1-3-ResourceManager-和-Application-Master" class="headerlink" title="1.3 ResourceManager 和 Application Master"></a>1.3 ResourceManager 和 Application Master</h3><p>一旦应用程序通过ResourceManager中面向客户端的服务，被接纳入系统，它穿过ResourceManager内部负责拉起ApplicationMaster的状态机。</p>
+<h4 id="1-3-1-ApplicationMaster-Service"><a href="#1-3-1-ApplicationMaster-Service" class="headerlink" title="1.3.1 ApplicationMaster Service"></a>1.3.1 ApplicationMaster Service</h4><p>该组件响应所有来自ApplicationMaster的请求。ApplicationMasterProtocol是ApplicationMaster和ResourceManager通信的唯一协议。负责以下任务：</p>
+<ul>
+<li>注册新的ApplicationMaster.</li>
+<li>来自任意正在结束的ApplicationMaster的终止、取消注册请求。</li>
+<li>认证来自不同ApplicationMaster的所有请求，确保只有合法的ApplicationMaster发送的请求传递给ResourceManager中的应用程序对象。</li>
+<li>获取来自所有运行的ApplicationMaster的Container的分配和释放请求，异步转发给YARN的调度器。</li>
+</ul>
+<p>ApplicationMaster有额外的逻辑确保在任意时间点，任意ApplicationMaster只有一个线程可以发送请求给ResourceManager。ResourceManager上所有来自ApplicationMaster的RPC请求都进行了串行化。</p>
+<h4 id="1-3-2-ApplicationMaster存活监控"><a href="#1-3-2-ApplicationMaster存活监控" class="headerlink" title="1.3.2 ApplicationMaster存活监控"></a>1.3.2 ApplicationMaster存活监控</h4><p>该监视器跟踪每个ApplicationMaster以及它最后的心跳时间。在指定的时间间隔内，没有产生心跳的ApplicationMaster被认为死亡且在ResourceManager中认为超时。所有处在运行/分配状态，并且从属于一个超时的ApplicationMaster的Container，也被标记为死亡。ResourceManager重新调度这个应用程序，在一个新的Container上运行一个新的ApplicationMaster实例，默认情况下，最多允许运行两次这样的尝试。</p>
+<h3 id="1-4-ResourceManager和NodeManager"><a href="#1-4-ResourceManager和NodeManager" class="headerlink" title="1.4 ResourceManager和NodeManager"></a>1.4 ResourceManager和NodeManager</h3><h4 id="1-4-1-Resource-Tracker-Service"><a href="#1-4-1-Resource-Tracker-Service" class="headerlink" title="1.4.1 Resource Tracker Service"></a>1.4.1 Resource Tracker Service</h4><p>NodeManager周期性的发送心跳到ResourceManager，ResourceManager的该组件负责响应来自所有节点的RPC。它负责以下任务：</p>
+<ul>
+<li>注册新节点</li>
+<li>接受前面注册节点的心跳</li>
+<li>确保只有“合法”的节点可以和ResourceManager通信，拒绝不合法节点。</li>
+</ul>
+<h4 id="1-4-2-NodeManager存活监控"><a href="#1-4-2-NodeManager存活监控" class="headerlink" title="1.4.2 NodeManager存活监控"></a>1.4.2 NodeManager存活监控</h4><p>该组件跟踪每一个节点的标志符和它最后的心跳时间。任何没有在配置的时间间隔内发送心跳的节点被认为死亡且在RM中超时。所有运行在当前超时节点上的Container被标记为死亡，且没有新的Container调度到该节点</p>
+<h3 id="1-5-ResourceManager核心组件"><a href="#1-5-ResourceManager核心组件" class="headerlink" title="1.5 ResourceManager核心组件"></a>1.5 ResourceManager核心组件</h3><h4 id="1-5-1-ApplicationsManager"><a href="#1-5-1-ApplicationsManager" class="headerlink" title="1.5.1 ApplicationsManager"></a>1.5.1 ApplicationsManager</h4><p>ApplicationManager负责管理已提交的应用程序的集合。应用程序提交后，首先检查应用程序的规格，拒绝ApplicationMaster资源请求不合法的应用程序，然后确定没有其他已提交的应用程序已经使用了相同的ID，最后把通过检查的应用程序转给调度器。</p>
+<h4 id="1-5-2-ApplicationMaster-Launcher"><a href="#1-5-2-ApplicationMaster-Launcher" class="headerlink" title="1.5.2 ApplicationMaster Launcher"></a>1.5.2 ApplicationMaster Launcher</h4><p>YARN中，每一个其他类型的Contaienr的拉起是由ApplicationMaster发起，ApplicationMaster本身的Container由ResourceManager申请，并在NodeManager上拉起。ApplicationMaster Launcher负责该项工作。该组件维护一个线程池来设置环境且和NodeManager通信来拉起ApplicationMaster。在一个应用程序正常结束或者强行终止时，负责告诉NodeManager来清理ApplicationMaster。 </p>
+<h4 id="1-5-3-YarnScheduler"><a href="#1-5-3-YarnScheduler" class="headerlink" title="1.5.3 YarnScheduler"></a>1.5.3 YarnScheduler</h4><p>yarn调度器负责给正在运行的应用程序分配资源。</p>
+<h4 id="1-5-4-ContainerAllocationExpirer"><a href="#1-5-4-ContainerAllocationExpirer" class="headerlink" title="1.5.4 ContainerAllocationExpirer"></a>1.5.4 ContainerAllocationExpirer</h4><p>该组件负责确保所有分配的Container最终被ApplicationMaster使用，并在相应的NodeManager上拉起。ApplicationMaster运行着非可信任的用户代码，可能拿到分配的Container而不使用它们。为解决该问题，ContainerAllocationExpirer包含了一个已分配但是还没有在相应NodeManager上启动的Container列表。对任意Container，在一个时间间隔内，如果相应的NodeManager没有报告RM该Container已经运行，则在RM中该容器被当作死亡。<br>NodeManager自己也查看该超时时间，若Container已经超时，则NodeManager拒绝拉起该Container。因此时钟同步很重要。</p>
+<h2 id="2-NodeManager"><a href="#2-NodeManager" class="headerlink" title="2. NodeManager"></a>2. NodeManager</h2><p>NodeManager根据Yarn应用程序的要求，使用节点上的物理资源来运行Container，NodeManager主要有以下职责：</p>
+<ul>
+<li>保持与ResourceManager的同步</li>
+<li>跟踪节点的健康状况</li>
+<li>管理各个Container的生命周期，监控每个Container的资源使用情况</li>
+<li>管理分布式缓存</li>
+<li>管理各个Container生成的日志</li>
+</ul>
+<p>NodeManager启动后会向ResourceManager注册，NodeManager通过周期性的心跳汇报自己的状态并接受来自ResourceManager的指令，Scheduler处理一个节点的心跳时，会在相应的NodeManager上分配相应的Container,随后通过ApplicationMaster与ResourceManager的心跳将其返回给ApplicationMaster. 所有的Container都通过Container Launch Context来描述。在真正拉起一个Container之前，NodeManager会将所有需要的库文件下载到本地，NodeManager也可能按照ResourceManager的指令杀死Contaienr，Container退出时，NodeManager就会清理掉它的本地工作目录。NodeManager周期性地与ResourceManager通信，汇报各个Container的状态更新，ResourceManager会为之返回待清理的Container列表等信息。</p>
+<h2 id="3-ApplicationMaster"><a href="#3-ApplicationMaster" class="headerlink" title="3. ApplicationMaster"></a>3. ApplicationMaster</h2><p>一旦应用程序被提交后，应用程序在ResourceManager中的代表将申请一个Container来启动Application Master。一旦分配了Container，ApplicationMasterLauncher将直接与该Container对应的NodeManager通信，以设置并启动Container，于是ApplicationMaster启动，ApplicationMaster向ResourceManager申请Container来执行实际的工作，计算过程在Container中进行，Container与Application Master保持通信，并告知任务过程。应用程序完成后，ApplicationMaster从ResourceManager中注销。</p>
+<p>ApplicationMaster将负责以下任务：</p>
+<ul>
+<li>初始化向ResourceManager报告自己活跃信息的进程</li>
+<li>计算应用程序的资源需求</li>
+<li>将需求转换成YARN Scheduler可以理解的ResourceRequest</li>
+<li>与Yarn Scheduler协商申请资源</li>
+<li>监控Container的运行状态（从NodeManager获取）</li>
+<li>对Container失败的情况进行处理，在必要的情况下重新申请资源</li>
+</ul>
+<p>ApplicationMaster从ResourceManager获得Container后，就可以执行Container的实际启动工作。启动Container前，首先根据需要构造ContainerLaunchContext对象，该对象包括资源分配的大小、启动Container的执行命令、进程环境等。它可以通过与NodeManager通信，逐一启动Container，也可以批量运行单个节点上的所有Container，ApplicationMaster向NodeManager节点发送StartContainerRequest请求，NodeManager通过StartContainerResponse响应，该响应包含成功启动的Container列表、每个失败的startContainerRequest对应的ContainerID到异常的映射。<br>ApplicationMaster可以向NodeManager发送StopContainerRequest请求，停止在该节点上运行的一系列Container，NodeManager通过StopContainersResponse回应。<br>当ApplicationMaster退出时，ResourceManager将根据它提交的上下文杀死所有正在运行而没有被ApplicationMaster显示终止的Container。</p>
+<p>##总结：</p>
+<p>NodeManager启动后，首先会向ResourceManager注册，然后定期心跳报告自身节点的状态信息及资源信息，告知自己还处于存活状态，ResourceManager在指定时间间隔内如果没有收到某个NodeManager的心跳报告，则认为该NodeManager节点不可用。然后，客户端提交作业给ResourceManager，ResourceManager会返回给客户端一个ApplicationID，客户端又向ResourceManager提交一个Application Submission Context，该上下文包含ApplicationID、队列名、作业文件、及启动ApplcationMaster的CLC(ContainerLaunchContext)等信息，ResourceManager会在某个NodeManager上启动Container0用于运行ApplicationMaster，（ApplicationMaster也会向ResourceManager进行定期心跳报告）并将当前集群的资源容量信息发给ApplicationMaster，ApplicationMaster计算application所需要的资源，然后将资源需求封装成yarn scheduler可以理解的resourceRequest格式，Yarn收到ApplicationMaster的资源请求后,尽可能最优的分配Container资源，ApplicationMaster在启动container之前会先进行构造ContainerLaunchContext对象，然后再向指定的NodeManager节点发出StartContainerRequest请求来启动Container，Container启动后，NodeManager会向ResourceManager汇报Container的状态信息，ResourceManager不解释也不关心Contaienr的状态，ResourceManager把有关Container的信息通知给ApplicationMaster，只有ApplicationMaster才能决定RM报告的Container的退出状态成功或失败的含义。ApplicationMaster判断程序运行结束后，发出Finish信号给ResourceManager，ApplicationMaster在发出信号后不会立即被杀死，直至ApplicationMaster自己退出，以便做一些清理工作。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Bigdata/" rel="tag"># Bigdata</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/07/Yarn/" rel="next" title="yarn资源模型">
+                <i class="fa fa-chevron-left"></i> yarn资源模型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="panhuafan" />
+            
+              <p class="site-author-name" itemprop="name">panhuafan</p>
+              <p class="site-description motion-element" itemprop="description">像一出默剧 视线有雾气</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/panhuafan" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:panhuafan@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-ResourceManager"><span class="nav-number">1.</span> <span class="nav-text">1. ResourceManager</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-概述"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-ResourceManager和Client"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 ResourceManager和Client</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-Client-Serivce"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 Client Serivce</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-2-Administration-Service"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2 Administration Service</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-Application-ACL-Manager"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.2.3 Application ACL Manager</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-4-ResourceManager-Web-Applicaition-和-Web-Service"><span class="nav-number">1.2.4.</span> <span class="nav-text">1.2.4 ResourceManager Web Applicaition 和 Web Service</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-ResourceManager-和-Application-Master"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 ResourceManager 和 Application Master</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-ApplicationMaster-Service"><span class="nav-number">1.3.1.</span> <span class="nav-text">1.3.1 ApplicationMaster Service</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-2-ApplicationMaster存活监控"><span class="nav-number">1.3.2.</span> <span class="nav-text">1.3.2 ApplicationMaster存活监控</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-ResourceManager和NodeManager"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 ResourceManager和NodeManager</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-1-Resource-Tracker-Service"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1 Resource Tracker Service</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-2-NodeManager存活监控"><span class="nav-number">1.4.2.</span> <span class="nav-text">1.4.2 NodeManager存活监控</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-ResourceManager核心组件"><span class="nav-number">1.5.</span> <span class="nav-text">1.5 ResourceManager核心组件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-1-ApplicationsManager"><span class="nav-number">1.5.1.</span> <span class="nav-text">1.5.1 ApplicationsManager</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-2-ApplicationMaster-Launcher"><span class="nav-number">1.5.2.</span> <span class="nav-text">1.5.2 ApplicationMaster Launcher</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-3-YarnScheduler"><span class="nav-number">1.5.3.</span> <span class="nav-text">1.5.3 YarnScheduler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-4-ContainerAllocationExpirer"><span class="nav-number">1.5.4.</span> <span class="nav-text">1.5.4 ContainerAllocationExpirer</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-NodeManager"><span class="nav-number">2.</span> <span class="nav-text">2. NodeManager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-ApplicationMaster"><span class="nav-number">3.</span> <span class="nav-text">3. ApplicationMaster</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">panhuafan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
